@@ -12,9 +12,9 @@ int main()
     int count = 5;
     
     while (1) {
-        get_block_count();
+        int actual_count = get_block_count();
         count++;
-        printf("Count = %d\n", count);
+        printf("Count = %d and %d\n", count, actual_count);
         sleep(count);
         
     }

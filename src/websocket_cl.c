@@ -20,7 +20,15 @@ bool command_sent = false;
 
 void sleep_function(int milliseconds) {
     
-    int seconds = milliseconds / 1000;
+    int seconds;
+    
+    if (milliseconds < 1000) {
+        seconds = 1;
+    }
+    else {
+        seconds = milliseconds / 1000;
+    }
+    
     sleep(seconds);
     
     //vTaskDelay(milliseconds / portTICK_PERIOD_MS);
@@ -161,9 +169,25 @@ int get_data_via_ws(){
 
 int get_block_count(){
     /* Works; returns the integer processed block count */
+    int count_int;
+    
     sprintf( (char *) rpc_command, "{\"action\":\"block_count\"}" );
     get_data_via_ws();
     
-    return 0;
+    const cJSON *count = NULL;
+    cJSON *json = cJSON_Parse(rx_string);
+    
+    count = cJSON_GetObjectItemCaseSensitive(json, "count");
+    if (cJSON_IsString(count) && (count->valuestring != NULL))
+    {
+        count_int = atoi(count->valuestring);
+    }
+    else{
+        count_int = 0;
+    }
+    
+    cJSON_Delete(json);
+    
+    return count_int;
 }
 
