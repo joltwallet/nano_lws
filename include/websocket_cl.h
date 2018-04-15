@@ -19,9 +19,11 @@
 
 #define BLOCK_BUFFER_SIZE 512
 
-//#include "mbedtls/bignum.h"
-#include "cjson/cJSON.h"
+#include "mbedtls/bignum.h"
+#include "cJSON.h"
+#include "nano_lib.h"
 
 int get_block_count();
+int get_head(nl_block_t *block);
 
 #endif
