@@ -2,5 +2,5 @@
 ## Wrapper around libwebsocket (LWS) which includes settings to connect to nanoray raicast server
 
 ### Functions
-`int get_data_via_ws(char *user_rpc_command, char *result_data)`
+`int get_data_via_ws(unsigned char *user_rpc_command, unsigned char *result_data)`
 
