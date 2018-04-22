@@ -124,7 +124,7 @@ int get_block_count(){
     
     snprintf( (char *) rpc_command, 1024, "{\"action\":\"block_count\"}" );
     printf("%s\n", rpc_command);
-    get_data_via_ws(rpc_command, rx_string);
+    network_get_data(rpc_command, rx_string);
 
     printf("Rx String: %s\n", rx_string);
     
