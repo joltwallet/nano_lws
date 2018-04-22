@@ -143,10 +143,8 @@ int get_data_via_ws(char *user_rpc_command, char *result_data){
         printf("Opening ws\n");
         struct lws_client_connect_info ccinfo = {0};
         ccinfo.context = context;
-        //ccinfo.address = "light.nano.org";
         ccinfo.address = "yapraiwallet.space";
         ccinfo.path = "/";
-        //ccinfo.port = 443;
         ccinfo.port = 8000;
         ccinfo.ssl_connection = 1;
         ccinfo.host = lws_canonical_hostname( context );
@@ -177,8 +175,8 @@ int get_data_via_ws(char *user_rpc_command, char *result_data){
 
     lws_service( context, /* timeout_ms = */ 0 );
     //lws_context_destroy(context);
-    printf("Returned\n");
 
     strcpy(result_data, rx_string);
+    
     return 0;
 }
