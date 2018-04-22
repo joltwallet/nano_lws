@@ -1,7 +1,7 @@
 #ifndef __INCLUDE_WEBSOCKET_H__
 #define __INCLUDE_WEBSOCKET_H__
 
-#define RX_BUFFER_BYTES (1024)
+#define RX_BUFFER_BYTES (1536)
 #define RECEIVE_POLLING_PERIOD_MS pdMS_TO_TICKS(10000)
 
 // todo: maybe do something fancier with malloc
@@ -17,7 +17,7 @@
 #define HEX_256 2*BIN_256 + 1
 #define HEX_512 2*BIN_512 + 1
 
-#define BLOCK_BUFFER_SIZE 512
+#define BLOCK_BUFFER_SIZE 1536
 
 #include "mbedtls/bignum.h"
 #include "cJSON.h"
