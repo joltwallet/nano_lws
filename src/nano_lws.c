@@ -18,11 +18,12 @@
 #include <stdbool.h>
 #include <string.h>
 
+#include <libwebsockets.h>
+
 #ifdef ESP32
-#include "libwebsockets.h"
 #include "nano_lws.h"
 #else
-#include <libwebsockets.h>
+
 #include "../include/nano_lws.h"
 #endif
 
