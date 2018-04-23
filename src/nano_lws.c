@@ -161,7 +161,7 @@ int network_get_data(unsigned char *user_rpc_command, unsigned char *result_data
     }
     
     printf("Now send the command\n");
-    strcpy(rpc_command, user_rpc_command);
+    strcpy((char *)rpc_command, (char *)user_rpc_command);
     receive_complete = false;
     command_sent = false;
 
@@ -182,7 +182,7 @@ int network_get_data(unsigned char *user_rpc_command, unsigned char *result_data
     lws_service( context, /* timeout_ms = */ 0 );
     //lws_context_destroy(context);
 
-    strcpy(result_data, rx_string);
+    strcpy((char *)result_data, (char *)rx_string);
     
     return 0;
 }
