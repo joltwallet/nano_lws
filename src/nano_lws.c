@@ -38,6 +38,9 @@ bool command_sent = false;
 
 void sleep_function(int milliseconds) {
     
+#ifdef ESP32
+    vTaskDelay(milliseconds / portTICK_PERIOD_MS);
+#else
     int seconds;
     
     if (milliseconds < 1000) {
@@ -48,8 +51,8 @@ void sleep_function(int milliseconds) {
     }
     
     sleep(seconds);
-    
-    //vTaskDelay(milliseconds / portTICK_PERIOD_MS);
+#endif
+
     
 }
 
@@ -72,8 +75,8 @@ static int ws_callback( struct lws *wsi, enum lws_callback_reasons reason,\
         }
             
         case LWS_CALLBACK_CLIENT_WRITEABLE:{
+            printf("Callback: Writeable\n");
             if(command_sent == false){
-                printf("Callback: Writeable\n");
                 size_t n = strlen((char *) rpc_command);
                 printf("Command being sent out: %s\n", rpc_command); // debug print rpc command to terminal
                 lws_write( web_socket, rpc_command, n, LWS_WRITE_TEXT );
@@ -90,7 +93,9 @@ static int ws_callback( struct lws *wsi, enum lws_callback_reasons reason,\
         }
             
         case LWS_CALLBACK_CLIENT_CONNECTION_ERROR:{
-            printf("Callback: Error\n");
+            printf("Callback: Error %d\n", LWS_CALLBACK_CLIENT_CONNECTION_ERROR);
+            printf("CLIENT_CONNECTION_ERROR: %s\n",
+                     in ? (char *)in : "(null)");
             web_socket = NULL;
             return -1;
             break;
@@ -135,6 +140,7 @@ int network_get_data(unsigned char *user_rpc_command, unsigned char *result_data
         info.pt_serv_buf_size = 1024;
         
         info.options |= LWS_SERVER_OPTION_DO_SSL_GLOBAL_INIT;
+        //info.options |= LWS_SERVER_OPTION_JUST_USE_RAW_ORIGIN;
         
         context = lws_create_context( &info );
         
@@ -148,16 +154,22 @@ int network_get_data(unsigned char *user_rpc_command, unsigned char *result_data
         
         printf("Opening ws\n");
         struct lws_client_connect_info ccinfo = {0};
+        memset( &ccinfo, 0, sizeof(ccinfo) );
+        
         ccinfo.context = context;
         ccinfo.address = "yapraiwallet.space";
+        //ccinfo.address = "178.62.11.37";
         ccinfo.path = "/";
         ccinfo.port = 8000;
-        ccinfo.ssl_connection = 1;
+        ccinfo.ssl_connection = 0;
         ccinfo.host = lws_canonical_hostname( context );
         ccinfo.origin = "origin";
         ccinfo.protocol = protocols[PROTOCOL_RAICAST].name;
         web_socket = lws_client_connect_via_info(&ccinfo);
         lws_service( context, /* timeout_ms = */ 0 );
+        sleep_function(300);
+        
+        printf("%s\n", ccinfo.address);
     }
     
     printf("Now send the command\n");
@@ -169,6 +181,7 @@ int network_get_data(unsigned char *user_rpc_command, unsigned char *result_data
     while(!receive_complete){
         //printf("Waiting for callback, receive_complete = %d, command_sent = %d\n", receive_complete, command_sent);
         if (!web_socket) {
+            printf("No websocket, breaking\n");
             break;
         }
         if (!command_sent){
@@ -176,7 +189,7 @@ int network_get_data(unsigned char *user_rpc_command, unsigned char *result_data
             lws_callback_on_writable( web_socket );
         }
         lws_service( context, 0 );
-        sleep_function(300);
+        sleep_function(500);
     }
 
     lws_service( context, /* timeout_ms = */ 0 );
