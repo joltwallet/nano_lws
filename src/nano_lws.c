@@ -1,24 +1,10 @@
-/*
- Functions your library should have:
- 
- // Assumes wifi is already up and running
- setup_ws(params);
- 
- // Populate work field given account field
- get_work(&block);
- 
- //completely fill block fields with head block data
- get_head(&block);
- 
- // Parse it into a process RPC command
- process_block(&block);
- */
 
 #include <stdio.h>
 #include <stdbool.h>
 #include <string.h>
 
 #include <libwebsockets.h>
+#include "esp_log.h"
 
 #ifdef ESP32
 #include "nano_lws.h"
@@ -35,6 +21,8 @@ unsigned char buf[LWS_SEND_BUFFER_PRE_PADDING + RX_BUFFER_BYTES + LWS_SEND_BUFFE
 unsigned char *rpc_command = &buf[LWS_SEND_BUFFER_PRE_PADDING];
 bool receive_complete = false;
 bool command_sent = false;
+
+static const char *TAG = "network_task";
 
 void sleep_function(int milliseconds) {
     
@@ -123,6 +111,19 @@ static struct lws_protocols protocols[] ={
     },
     { NULL, NULL, 0, 0 } /* terminator */
 };
+
+void network_task(void *pvParameters)
+{
+    
+    while (1) {
+        
+        vTaskDelay(120000 / portTICK_PERIOD_MS);
+        ESP_LOGI(TAG, "RESET Websocket");
+        web_socket = NULL;
+    }
+    
+    vTaskDelete( NULL );
+}
 
 int network_get_data(unsigned char *user_rpc_command, unsigned char *result_data){
     
