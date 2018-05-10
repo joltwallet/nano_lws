@@ -6,12 +6,7 @@
 #include <libwebsockets.h>
 #include "esp_log.h"
 
-#ifdef ESP32
 #include "nano_lws.h"
-#else
-
-#include "../include/nano_lws.h"
-#endif
 
 static struct lws *web_socket = NULL;
 static struct lws_context *context = NULL;
@@ -25,22 +20,8 @@ bool command_sent = false;
 static const char *TAG = "network_task";
 
 void sleep_function(int milliseconds) {
-    
-#ifdef ESP32
-    vTaskDelay(milliseconds / portTICK_PERIOD_MS);
-#else
-    int seconds;
-    
-    if (milliseconds < 1000) {
-        seconds = 1;
-    }
-    else {
-        seconds = milliseconds / 1000;
-    }
-    
-    sleep(seconds);
-#endif
 
+    vTaskDelay(milliseconds / portTICK_PERIOD_MS);
     
 }
 
@@ -48,14 +29,14 @@ static int ws_callback( struct lws *wsi, enum lws_callback_reasons reason,\
         void *user, void *in, size_t len ){
     switch( reason ){
         case LWS_CALLBACK_CLIENT_ESTABLISHED:{
-            printf("Callback: Established\n");
+            ESP_LOGI(TAG, "Callback: Established\n");
             lws_callback_on_writable( wsi );
             break;
         }
         case LWS_CALLBACK_CLIENT_RECEIVE:{
-            printf("Callback: Receive\n");
+            ESP_LOGI(TAG, "Callback: Receive\n");
             ((char *) in)[len] = '\0';
-            fprintf(stderr, "rx %d '%s'\n", (int)len, (char *)in);
+            //fprintf(stderr, "rx %d '%s'\n", (int)len, (char *)in);
             snprintf(rx_string, 1024, "%s", (char *) in);
             receive_complete = true;
             return 0;
@@ -63,10 +44,10 @@ static int ws_callback( struct lws *wsi, enum lws_callback_reasons reason,\
         }
             
         case LWS_CALLBACK_CLIENT_WRITEABLE:{
-            printf("Callback: Writeable\n");
+            ESP_LOGI(TAG, "Callback: Writeable\n");
             if(command_sent == false){
                 size_t n = strlen((char *) rpc_command);
-                printf("Command being sent out: %s\n", rpc_command); // debug print rpc command to terminal
+                ESP_LOGI(TAG, "Command being sent out: %s\n", rpc_command); // debug print rpc command to terminal
                 lws_write( web_socket, rpc_command, n, LWS_WRITE_TEXT );
                 command_sent=true;
             }
@@ -74,15 +55,15 @@ static int ws_callback( struct lws *wsi, enum lws_callback_reasons reason,\
         }
             
         case LWS_CALLBACK_CLOSED:{
-            printf("Callback: Closed\n");
+            ESP_LOGI(TAG, "Callback: Closed\n");
             web_socket = NULL;
             return 0;
             break;
         }
             
         case LWS_CALLBACK_CLIENT_CONNECTION_ERROR:{
-            printf("Callback: Error %d\n", LWS_CALLBACK_CLIENT_CONNECTION_ERROR);
-            printf("CLIENT_CONNECTION_ERROR: %s\n",
+            ESP_LOGI(TAG, "Callback: Error %d\n", LWS_CALLBACK_CLIENT_CONNECTION_ERROR);
+            ESP_LOGI(TAG, "CLIENT_CONNECTION_ERROR: %s\n",
                      in ? (char *)in : "(null)");
             web_socket = NULL;
             return -1;
@@ -128,7 +109,7 @@ void network_task(void *pvParameters)
 int network_get_data(unsigned char *user_rpc_command, unsigned char *result_data){
     
     if( !context){
-        printf("Setting up lws\n");
+        ESP_LOGI(TAG, "Setting up lws\n");
         struct lws_context_creation_info info;
         memset( &info, 0, sizeof(info) );
         
@@ -148,12 +129,12 @@ int network_get_data(unsigned char *user_rpc_command, unsigned char *result_data
         lws_set_log_level(0, lwsl_emit_syslog);
     }
     else {
-        printf("Already setup\n");
+        ESP_LOGI(TAG, "Already setup\n");
     }
     
     if( !web_socket){
         
-        printf("Opening ws\n");
+        ESP_LOGI(TAG, "Opening ws\n");
         struct lws_client_connect_info ccinfo = {0};
         memset( &ccinfo, 0, sizeof(ccinfo) );
         
@@ -170,23 +151,23 @@ int network_get_data(unsigned char *user_rpc_command, unsigned char *result_data
         lws_service( context, /* timeout_ms = */ 0 );
         sleep_function(300);
         
-        printf("%s\n", ccinfo.address);
+        ESP_LOGI(TAG, "%s\n", ccinfo.address);
     }
     
-    printf("Now send the command\n");
-    strcpy((char *)rpc_command, (char *)user_rpc_command);
+    ESP_LOGI(TAG, "Now send the command\n");
+    strncpy((char *)rpc_command, (char *)user_rpc_command, 1536);
     receive_complete = false;
     command_sent = false;
 
     // Wait for received message
     while(!receive_complete){
-        //printf("Waiting for callback, receive_complete = %d, command_sent = %d\n", receive_complete, command_sent);
+        //ESP_LOGI(TAG, "Waiting for callback, receive_complete = %d, command_sent = %d\n", receive_complete, command_sent);
         if (!web_socket) {
-            printf("No websocket, breaking\n");
+            ESP_LOGI(TAG, "No websocket, breaking\n");
             break;
         }
         if (!command_sent){
-            printf("Make callback request\n");
+            ESP_LOGI(TAG, "Make callback request\n");
             lws_callback_on_writable( web_socket );
         }
         lws_service( context, 0 );
@@ -196,7 +177,7 @@ int network_get_data(unsigned char *user_rpc_command, unsigned char *result_data
     lws_service( context, /* timeout_ms = */ 0 );
     //lws_context_destroy(context);
 
-    strcpy((char *)result_data, (char *)rx_string);
+    strncpy((char *)result_data, (char *)rx_string, 1024);
     
     return 0;
 }
