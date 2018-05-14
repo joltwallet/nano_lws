@@ -149,7 +149,7 @@ int network_get_data(unsigned char *user_rpc_command, unsigned char *result_data
         ccinfo.protocol = protocols[PROTOCOL_RAICAST].name;
         web_socket = lws_client_connect_via_info(&ccinfo);
         lws_service( context, /* timeout_ms = */ 0 );
-        sleep_function(300);
+        sleep_function(100);
         
         ESP_LOGI(TAG, "%s\n", ccinfo.address);
     }
@@ -171,7 +171,7 @@ int network_get_data(unsigned char *user_rpc_command, unsigned char *result_data
             lws_callback_on_writable( web_socket );
         }
         lws_service( context, 0 );
-        sleep_function(500);
+        sleep_function(100);
     }
 
     lws_service( context, /* timeout_ms = */ 0 );
