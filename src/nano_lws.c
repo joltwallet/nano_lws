@@ -20,9 +20,7 @@ bool command_sent = false;
 static const char *TAG = "network_task";
 
 void sleep_function(int milliseconds) {
-
     vTaskDelay(milliseconds / portTICK_PERIOD_MS);
-    
 }
 
 static int ws_callback( struct lws *wsi, enum lws_callback_reasons reason,\
@@ -106,7 +104,8 @@ void network_task(void *pvParameters)
     vTaskDelete( NULL );
 }
 
-int network_get_data(unsigned char *user_rpc_command, unsigned char *result_data){
+int network_get_data(unsigned char *user_rpc_command,
+        unsigned char *result_data_buf, size_t result_data_buf_len){
     
     if( !context){
         ESP_LOGI(TAG, "Setting up lws\n");
@@ -155,7 +154,7 @@ int network_get_data(unsigned char *user_rpc_command, unsigned char *result_data
     }
     
     ESP_LOGI(TAG, "Now send the command\n");
-    strncpy((char *)rpc_command, (char *)user_rpc_command, 1536);
+    strlcpy((char *)rpc_command, (char *)user_rpc_command, RX_BUFFER_BYTES);
     receive_complete = false;
     command_sent = false;
 
@@ -177,7 +176,7 @@ int network_get_data(unsigned char *user_rpc_command, unsigned char *result_data
     lws_service( context, /* timeout_ms = */ 0 );
     //lws_context_destroy(context);
 
-    strncpy((char *)result_data, (char *)rx_string, 1024);
+    strlcpy((char *)result_data_buf, (char *)rx_string, result_data_buf_len);
     
     return 0;
 }
