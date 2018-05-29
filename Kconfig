@@ -1,0 +1,24 @@
+menu "Nano ESP32 Library Config"
+
+    config NANO_LWS_DOMAIN
+        string
+        prompt "Nano Server Domain"
+        default "yapraiwallet.space"
+        help
+            IP/URL for the Nano Server
+
+    config NANO_LWS_PATH
+        string
+        prompt "Nano Server Path"
+        default "/"
+        help
+            Nano Server Path
+
+    config NANO_LWS_PORT
+        int
+        prompt "Nano Server Port"
+        default 8000
+        help
+            Nano Server Port
+
+endmenu

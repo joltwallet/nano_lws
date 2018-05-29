@@ -138,10 +138,9 @@ int network_get_data(unsigned char *user_rpc_command,
         memset( &ccinfo, 0, sizeof(ccinfo) );
         
         ccinfo.context = context;
-        ccinfo.address = "yapraiwallet.space";
-        //ccinfo.address = "178.62.11.37";
-        ccinfo.path = "/";
-        ccinfo.port = 8000;
+        ccinfo.address = CONFIG_NANO_LWS_DOMAIN;
+        ccinfo.path = CONFIG_NANO_LWS_PATH;
+        ccinfo.port = CONFIG_NANO_LWS_PORT;
         ccinfo.ssl_connection = 0;
         ccinfo.host = lws_canonical_hostname( context );
         ccinfo.origin = "origin";
