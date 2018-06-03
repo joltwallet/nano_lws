@@ -1,4 +1,4 @@
-menu "Nano ESP32 Library Config"
+menu "Nano Currency LWS"
 
     config NANO_LWS_DOMAIN
         string
