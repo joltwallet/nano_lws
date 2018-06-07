@@ -113,7 +113,7 @@ void network_task(void *pvParameters)
     while (1) {
         
         vTaskDelay(120000 / portTICK_PERIOD_MS);
-        ESP_LOGI(TAG, "RESET Websocket");
+        ESP_LOGV(TAG, "RESET Websocket");
         web_socket = NULL;
     }
     
