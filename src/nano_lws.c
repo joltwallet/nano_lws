@@ -35,6 +35,41 @@ bool command_sent = false;
 
 static const char *TAG = "network_task";
 
+// Can be set via the setter functions
+static volatile char *remote_domain = NULL;
+static volatile uint16_t remote_port = 0;
+static volatile char *remote_path = NULL;
+
+void nano_lws_set_remote_domain(char *str){
+    if( NULL != remote_domain ){
+        free((char *)remote_domain);
+    }
+    if( NULL != str ){
+        remote_domain = malloc(strlen(str)+1);
+        strcpy((char *)remote_domain, str);
+    }
+    else{
+        remote_domain = NULL;
+    }
+}
+
+void nano_lws_set_remote_port(uint16_t port){
+    remote_port = port;
+}
+
+void nano_lws_set_remote_path(char *str){
+    if( NULL != remote_path ){
+        free((char *)remote_path);
+    }
+    if( NULL != str ){
+        remote_path = malloc(strlen(str)+1);
+        strcpy((char *)remote_path, str);
+    }
+    else{
+        remote_path = NULL;
+    }
+}
+
 void sleep_function(int milliseconds) {
     vTaskDelay(milliseconds / portTICK_PERIOD_MS);
 }
@@ -103,15 +138,15 @@ static struct lws_protocols protocols[] ={
         ws_callback,
         0,
         RX_BUFFER_BYTES,
+        1, NULL, 0
     },
-    { NULL, NULL, 0, 0 } /* terminator */
+    { NULL, NULL, 0, 0, 1, NULL, 0 } /* terminator */
 };
 
 void network_task(void *pvParameters)
 {
     
     while (1) {
-        
         vTaskDelay(120000 / portTICK_PERIOD_MS);
         ESP_LOGV(TAG, "RESET Websocket");
         web_socket = NULL;
@@ -154,9 +189,16 @@ int network_get_data(unsigned char *user_rpc_command,
         memset( &ccinfo, 0, sizeof(ccinfo) );
         
         ccinfo.context = context;
-        ccinfo.address = CONFIG_NANO_LWS_DOMAIN;
-        ccinfo.path = CONFIG_NANO_LWS_PATH;
-        ccinfo.port = CONFIG_NANO_LWS_PORT;
+
+        ccinfo.address = (char *)(remote_domain ? remote_domain : CONFIG_NANO_LWS_DOMAIN);
+        ESP_LOGI(TAG, "address: %s", remote_domain ? remote_domain : CONFIG_NANO_LWS_DOMAIN);
+
+        ccinfo.path = (char *)(remote_path ? remote_path : CONFIG_NANO_LWS_PATH);
+        ESP_LOGI(TAG, "path: %s", remote_path ? remote_path : CONFIG_NANO_LWS_PATH);
+
+        ccinfo.port = (uint16_t)(remote_port ? remote_port : CONFIG_NANO_LWS_PORT);
+        ESP_LOGI(TAG, "port: %d", remote_port ? remote_port : CONFIG_NANO_LWS_PORT);
+
         ccinfo.ssl_connection = 0;
         ccinfo.host = lws_canonical_hostname( context );
         ccinfo.origin = "origin";
